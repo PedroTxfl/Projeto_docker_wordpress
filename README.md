@@ -15,3 +15,21 @@ Acesse o Console da Amazon Web Services e entre na área de serviços VPC.
   - Finalize e crie a VPC.
 
 ## Criar Sub-Redes
+
+
+## Criar Gateway de internet
+
+## Criar Nat Gateway
+
+## Criar Tabelas de Rotas
+
+## Criar Grupos de segurança
+### Bastion
+### APP Docker - Wordpress
+### EFS
+
+## Criar instância Bastion Host
+
+## Criar instância APP Docker -wordpress ??
+
+## criar e configurar efs ??
