@@ -18,6 +18,7 @@ Ainda no serviço VPC, acesse no menu lateral esquerdo "Sub-redes".
 - Clique em "Criar Sub-rede".
 - Em "VPC", selecione a VPC criada anteriormente.
 - Em "configurações de sub-rede", adicione 4 sub-redes(2 privadas e 2 públicas) com as configurações mostradas na tabela:
+
 | Nome da sub-rede | Zona de disponibilidade | Bloco CIDR IPv4  | 
 | ------------- | ------------- | ------------- |
 | SN-Private01  | us-east-1a  | 172.28.0.0/24  | 
