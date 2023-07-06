@@ -121,7 +121,14 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 | NFS | 2049    | TCP       | Grupo de segurança da Aplicação |
 
 
-## Criando EC2
+## Par de chaves
+Antes de executar uma instância, devemos criar um par de chaves. 
+- Na lateral esquerda, acesse "Pares de chaves".
+- Clique em "Criar par de chaves".
+- Dê um nome para o par de chaves, usarei "keySSHPedro".
+- Tipo de par de chaves: ```RSA```
+- Formato de arquivo de chave privada: ```.PEM```
+- A chave será baixada em formato ```.PEM```, você deve salvá-la em um diretório/pasta segura.
 
 #### APP Docker - Wordpress
 regra de entrada ssh apenas para o ip privado via bastion host ?
