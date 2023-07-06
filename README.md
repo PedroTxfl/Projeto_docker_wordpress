@@ -105,7 +105,7 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 
 | Tipo | Intervalo de Portas | Protocolo | Origem                        |
 |-------|-------|-----------|-------------------------------|
-| SSH | 22    | TCP       | Grupo de Segurança do Bastion Host |
+| SSH | 22    | TCP       | ID privado do bastion host |
 | HTTP | 80    | TCP       | IP privado do Load-Balancer |
 | HTTPS | 443    | TCP       | IP privado do Load-Balancer |
 
@@ -121,7 +121,25 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 | NFS | 2049    | TCP       | Grupo de segurança da Aplicação |
 
 
-## Par de chaves
+## Serviço EFS
+### Criando EFS
+O Amazon Elastic File System (Amazon EFS) oferece um sistema de arquivos simples, escalável e elástico para cargas de trabalho de uso geral para uso com Serviços de Nuvem AWS e recursos no local. 
+- Na AWS, Acesse o serviço EFS(Elastic File System)
+- Clique em "Criar sistema de arquivos"
+- Defina o nome para o EFS(opcional), usarei "EFS01"
+- Selecione a VPC "VPC-Projeto01".
+- Crie.
+
+### Configurando EFS
+- No painel dos sistemas de arquivos, selecione a EFS criada e clique em visualizar detalhes.
+- Clique em ```Anexar```.
+- Selecione ```Montar via DNS```.
+
+## MONTAGEM DO EFS NA EC2
+- na ec2 do app, ```cd / ``` ```sudo mkdir  ``` 
+
+## Serviço EC2
+### Par de chaves
 Antes de executar uma instância, devemos criar um par de chaves. 
 - Na lateral esquerda, acesse "Pares de chaves".
 - Clique em "Criar par de chaves".
@@ -141,4 +159,6 @@ regra de entrada ssh apenas para o ip privado via bastion host ?
 
 ## criar e configurar efs ??
 
-## sg ELB
+## Auto Scaling
+- template
+  - subnet privada 02
