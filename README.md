@@ -58,14 +58,14 @@ Ainda no serviço VPC, acesse no menu lateral esquerdo "Sub-redes".
 | SN-Private01  | us-east-1a  | 172.28.0.0/24  | 
 | SN-Private02  | us-east-1b | 172.28.3.0/24  |
 | SN-Public01  | us-east-1a  | 172.28.1.0/24  |
-| SN-Public01  | us-east-1b   | 172.28.2.0/24  |
+| SN-Public02  | us-east-1b   | 172.28.2.0/24  |
 
 - Finalize a criação clicando em "Criar sub-rede"
 - No painel de todas as sub-redes, selecione as duas públicas(SN-Public), uma de cada vez, e vá em "ações" > "Editar configurações de sub-rede" e marque a opção "Habilitar endereço IPv4 público de atribuição automática" e finalize.
 
 ### Criando Gateway de internet
 - No menu lateral esquerdo, clique em "Gateways da Internet" e depois em "Criar gateway da internet".
-- Em "Tag de nome", defina um nome, neste caso usarei "IG-pedro"
+- Em "Tag de nome", defina um nome, neste caso usarei "IG-01"
 - Finalize
 - No painel dos gateways de internet, selecione o que acabamos de criar e vá em "Ações" > Associar à VPC > associe à VPC que criamos.
 
@@ -84,19 +84,20 @@ Ainda no serviço VPC, acesse no menu lateral esquerdo "Sub-redes".
 - Agora iremos configurar as rotas de cada tabela para permitir o tráfego na internet para cada sub-rede, a sub-rede pública com gateway de internet e a sub-rede privada com o gateway NAT:
   - sub-rede pública
 
-  Selecione a tabela de rotas, no painel inferior, siga para rotas e selecione "Editar rotas". Após isso, adicione rotas com:
+    Selecione a tabela de rotas, no painel inferior, siga para rotas e selecione "Editar rotas". Após isso, adicione rotas com:
 
-  Destino: ```0.0.0.0/0```
+    Destino: ```0.0.0.0/0```
 
-  Alvo: ```gateway da internet```
+    Alvo: ```gateway da internet```
 
 
   - sub-rede privada
-  Selecione a tabela de rotas, no painel inferior, siga para rotas e selecione "Editar rotas". Após isso, adicione rotas com:
+    
+    Selecione a tabela de rotas, no painel inferior, siga para rotas e selecione "Editar rotas". Após isso, adicione rotas com:
 
-  Destino: ```0.0.0.0/0```
+    Destino: ```0.0.0.0/0```
 
-  Alvo: ```NAT gateway ```
+    Alvo: ```NAT gateway ```
 
 ## Serviço EC2
 Acesse o console da Amazon Web Services, e entre nos serviços de EC2
@@ -110,15 +111,14 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 
 ### Grupo de Segurança do Bastion Host
 - Defina o nome do grupo, neste caso usarei "SG-BastioHost".
-- Na descrição insira "Grupo de segurança do bastion host para entrada via ssh apenas do meu IP"
+- Na descrição insira "Grupo de seguranca do bastion host para entrada via ssh apenas do meu IP"
 - Selecione a VPC "VPC-Projeto01".
 - Adicione a seguinte regra de entrada:
 
-| Tipo | Intervalo de Portas | Protocolo | Origem    |
+| Tipo | Intervalo de Portas | Protocolo | Tipo de Origem    |
 |-------------------|--------------------|-----------|-----------|
-| TCP Personalizado | 22 | TCP       | "MEU-IP"  |
+| SSH | 22 | TCP       | MEU-IP  |
 
-- Certifique-se de substituir "MEU-IP" pelo endereço IP correto para permitir o acesso ao Bastion Host. 
 
 ### Grupo de Segurança do Balanceador de Carga
 - Defina o nome do grupo, neste caso usarei "SG-LoadBalancer".
@@ -160,7 +160,7 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 O Amazon Elastic File System (Amazon EFS) oferece um sistema de arquivos simples, escalável e elástico para cargas de trabalho de uso geral para uso com Serviços de Nuvem AWS e recursos no local. 
 - Na AWS, Acesse o serviço EFS(Elastic File System)
 - Clique em "Criar sistema de arquivos"
-- Defina o nome para o EFS(opcional), usarei "EFS01"
+- Defina o nome para o EFS(opcional), usarei "EFS-01"
 - Selecione a VPC "VPC-Projeto01".
 - Crie.
 
@@ -168,11 +168,6 @@ O Amazon Elastic File System (Amazon EFS) oferece um sistema de arquivos simples
 - No painel dos sistemas de arquivos, selecione a EFS criada e clique em visualizar detalhes.
 - Clique em ```Anexar```.
 - Selecione ``````.
-
-
-
-#### APP Docker - Wordpress
-
 
 
 ## Serviços EC2
@@ -214,7 +209,7 @@ No console da Amazon Web Services, acesse o serviços de EC2
   -Tipo: ```instância```
   - Nome do grupo de destino: ```TG-APP```
   - VPC: ```VPC-Projeto01```
-  - Clique em Configurações avançadas de integridade" e deixe códigos de sucesso: ```200,302``` 
+  - Clique em Configurações avançadas de integridade" e deixe códigos de sucesso: ```200``` 
   - Após criado, no painel dos grupos de destino, selecione o mesmo e cliquem em "Ações" > "Registrar destinos" > Selecione a instância da aplicação(App) > abaixo, clique em "incluir como pendente", e finalmente, Clique em "Registrar destinos pendentes".
 
 ### Balanceador de carga (Load balancer)
@@ -273,7 +268,7 @@ No painel esquerdo, acesse "Grupos Auto Scaling"
 - "Próximo"
 - Em "Balanceamento de carga", selecione "Anexar a um balanceador de carga existente"
 - Selecione o grupo de destino criado (TG-APP)
-- Em "Verificações de integridade", marque a opção "Verificações de integridade"
+- Em "Verificações de integridade", marque a opção "Ative as verificações de integridade do Elastic Load Balancing"
 - "Próximo"
 - Em "Tamanho do grupo":
   - Capacidade desejada: ```1```
