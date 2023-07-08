@@ -104,8 +104,8 @@ Acesse o console da Amazon Web Services, e entre nos serviços de EC2
 
 ## Configurando Grupos de Segurança
 
-Agora vamos configurar quatro grupos de segurança para diferentes componentes da 
-infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
+Agora vamos configurar cinco grupos de segurança para diferentes componentes da 
+infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 
 - Clique em "Criar grupo de seguarança e configure:
 
@@ -144,7 +144,7 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 | HTTPS | 443    | TCP       | IP privado do Load-Balancer |
 
 
-### Grupo de seguraça do EFS
+### Grupo de segurança do EFS
 - Defina o nome do grupo, neste caso usarei "SG-EFS".
 - Na descrição insira "Grupo de seguranca do EFS"
 - Selecione a VPC "VPC-Projeto01".
@@ -153,6 +153,30 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação e EFS.
 | Tipo | Intervalo de Portas | Protocolo | Origem                        |
 |-------|-------|-----------|-------------------------------|
 | NFS | 2049    | TCP       | Grupo de segurança da Aplicação |
+
+### Grupo de segurança do RDS
+- Defina o nome do grupo, neste caso usarei "SG-RDS".
+- Na descrição insira "Grupo de seguranca do RDS"
+- Selecione a VPC "VPC-Projeto01".
+- Adicione as seguintes regras de entrada:
+| Tipo | Intervalo de Portas | Protocolo | Origem         |
+|-------|-------|-----------|-------------------------------|
+| MYSQL/Aurora | 3306    | TCP       | Grupo de segurança da Aplicação |
+
+## Serviço RDS
+No console da Amazon Web Services, acesse o serviço RDS.
+
+### Criando RDS
+- Clique em "Criar Banco de dados"
+  - Método de criação: Padrão
+  - Mecanismo: MySQL
+  - Modelo: Nível gratuito
+  - Nome: DB-01
+  - senha: (de sua preferência)
+  - VPC: VPC criada anteriormente
+  - Acesso Público: Sim
+  - Grupos de segurança da VPC existentes: "SG-RDS"
+  - Finalize em "Criar banco de dados"
 
 
 ## Serviço EFS
@@ -166,8 +190,8 @@ O Amazon Elastic File System (Amazon EFS) oferece um sistema de arquivos simples
 
 ### Configurando EFS
 - No painel dos sistemas de arquivos, selecione a EFS criada e clique em visualizar detalhes.
-- Clique em ```Anexar```.
-- Selecione ``````.
+- Abaixo, procure por "Rede" e clique em "Gerenciar"
+- Em cada zona de disponibilidade, selecione o grupo de segurança do EFS.
 
 
 ## Serviços EC2
@@ -191,13 +215,36 @@ Antes de executar uma instância, devemos criar um par de chaves.
 - Em "Configurações de rede", clique em "Editar" > em "Rede", selecione a VPC ```VPC-Projeto01``` > em "Sub-Rede", selecione a ```SN-Public01``` > Selecione o grupo de segurança do Bastion host ```SG-BastioHost``` 
 - Finalize e execute a instância.
 
-### Criar instância APP Docker -wordpress ??
+### Criar instância aplicação
 - Em instâncias, clique em "Executar instância" 
 - Dê o nome para a instância, colocarei "App"
 - Em "imagens de aplicação e de sistema operacional", selecione ```Amazon Linux 2```
 - Tipo de instância: ```t2.micro```
 - Par de chaves: ```keySSHPedro```
 - Em "Configurações de rede", clique em "Editar" > em "Rede", selecione a VPC ```VPC-Projeto01``` > em "Sub-Rede", selecione a ```SN-Private01``` > Selecione o grupo de segurança da aplicação ```SG-App```
+- Em "Avançados", em "User Data", preencha com:
+  ```
+  #!/bin/bash
+
+  yum update -y
+
+  yum install nfs-utils
+
+  yum install -y docker
+  service docker start
+  usermod -a -G docker ec2-user
+
+  yum install git -y
+
+  DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+  mkdir -p $DOCKER_CONFIG/cli-plugins
+  curl -SL https://github.com/docker/compose/releases/download/v2.19.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+  chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+  mkdir /mnt/efs
+  mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport <ENDEREÇO-DNsudo mount -t nfs4 -o nfsverS-DO-SEU-EFS>:/ /mnt/efs
+  ```
+
 - Finalize e execute a instância.
 
 ## Criando e configurando Balanceador de carga (Load Balancer)
@@ -294,6 +341,27 @@ Pensando em uma maior segurança, foi utilizado um Bastion Host para acessar a a
 - Pronto
 
 
+cd /mnt/efs/
+
+sudo nano docker-compose.yml
+
+```version: '3.7'
+services:
+  wordpress:
+    image: wordpress
+    volumes:
+      - /mnt/efs/website:/var/www/html
+    ports:
+      - "80:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: <ENDPOINT_DO_SEU_RDS> 
+      WORDPRESS_DB_USER:  <SEU_USUARIO_DO_DB>
+      WORDPRESS_DB_PASSWORD: <SUA_SENHA_DO_DB>
+      WORDPRESS_DB_NAME: <NOME_DO_SEU_DB>
+````
+```
+docker compose up -d
 
 
 
