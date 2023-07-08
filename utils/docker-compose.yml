@@ -3,7 +3,7 @@ services:
   wordpress:
     image: wordpress
     volumes:
-      - mnt/efs/website:var/www/html
+      - /mnt/efs/website:/var/www/html
     ports:
       - "80:80"
     restart: always
