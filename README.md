@@ -356,9 +356,9 @@ No painel esquerdo, acesse "Grupos Auto Scaling"
 - Em "Verificações de integridade", marque a opção "Ative as verificações de integridade do Elastic Load Balancing"
 - "Próximo"
 - Em "Tamanho do grupo":
-  - Capacidade desejada: ```1```
-  - Capacidade mínima: ```1```
-  - Capacidade máxima: ```5```
+  - Capacidade desejada: ```2```
+  - Capacidade mínima: ```2```
+  - Capacidade máxima: ```4```
 - Em "Políticas de escalabilidade", marque a opção Política de dimensionamento com monitoramento do objetivo" e mude o "Valor de destino para "70"
 - "Próximo"
 - Finalize em "Criar grupo do Auto Scaling"
