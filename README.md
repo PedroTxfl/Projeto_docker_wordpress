@@ -1,6 +1,7 @@
 # Atividade - AWS - Docker
 
-Impantar a seguinte arquitetura:
+Implantar a seguinte arquitetura:
+
 ![Arquitetura](https://user-images.githubusercontent.com/127341401/251820538-e412bb89-811c-4f1f-a8f9-b87715a1cc59.png)
 
 1. Instalação e configuração do DOCKER ou CONTAINERD no
