@@ -141,9 +141,9 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 
 | Tipo | Intervalo de Portas | Protocolo | Origem                        |
 |-------|-------|-----------|-------------------------------|
-| SSH | 22    | TCP       | ID privado do bastion host |
-| HTTP | 80    | TCP       | IP privado do Load-Balancer |
-
+| SSH | 22    | TCP       | IP PRIVADO DO BASTION HOST |
+| HTTP | 80    | TCP       | SG DO LOAD BALANCER |
+| NFS | 2049   | TCP       | SG DO EFS |
 
 ### Grupo de segurança do EFS
 - Defina o nome do grupo, neste caso usarei "SG-EFS".
@@ -153,7 +153,7 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 
 | Tipo | Intervalo de Portas | Protocolo | Origem                        |
 |-------|-------|-----------|-------------------------------|
-| NFS | 2049    | TCP       | Grupo de segurança da Aplicação |
+| NFS | 2049    | TCP       | CIRDR IPv4 DA VPC |
 
 ### Grupo de segurança do RDS
 - Defina o nome do grupo, neste caso usarei "SG-RDS".
@@ -163,7 +163,7 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 
 | Tipo | Intervalo de Portas | Protocolo | Origem         |
 |-------|-------|-----------|-------------------------------|
-| MYSQL/Aurora | 3306    | TCP       | Grupo de segurança da Aplicação |
+| MYSQL/Aurora | 3306    | TCP       | CIRDR IPv4 DA VPC |
 
 ## Serviço RDS
 No console da Amazon Web Services, acesse o serviço RDS.
