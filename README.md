@@ -1,5 +1,8 @@
 # Atividade - AWS - Docker
 
+Impantar a seguinte arquitetura:
+![Arquitetura](https://user-images.githubusercontent.com/127341401/251820538-e412bb89-811c-4f1f-a8f9-b87715a1cc59.png)
+
 1. Instalação e configuração do DOCKER ou CONTAINERD no
 host EC2;
 
@@ -129,7 +132,6 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 | Tipo | Intervalo de Portas | Protocolo | Origem    |
 |-------------------|--------------------|-----------|-----------|
 | HTTP | 80 | TCP       | 0.0.0.0/0  |
-| HTTPS | 443 | TCP       | 0.0.0.0/0  |
 
 ### Grupo de Segurança da Aplicação
 - Defina o nome do grupo, neste caso usarei "SG-App".
@@ -141,7 +143,6 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 |-------|-------|-----------|-------------------------------|
 | SSH | 22    | TCP       | ID privado do bastion host |
 | HTTP | 80    | TCP       | IP privado do Load-Balancer |
-| HTTPS | 443    | TCP       | IP privado do Load-Balancer |
 
 
 ### Grupo de segurança do EFS
@@ -159,6 +160,7 @@ infraestrutura: Bastion Host, Balanceador de Carga, Aplicação, EFS e RDS.
 - Na descrição insira "Grupo de seguranca do RDS"
 - Selecione a VPC "VPC-Projeto01".
 - Adicione as seguintes regras de entrada:
+
 | Tipo | Intervalo de Portas | Protocolo | Origem         |
 |-------|-------|-----------|-------------------------------|
 | MYSQL/Aurora | 3306    | TCP       | Grupo de segurança da Aplicação |
@@ -225,27 +227,62 @@ Antes de executar uma instância, devemos criar um par de chaves.
 - Em "Avançados", em "User Data", preencha com:
   ```
   #!/bin/bash
-
-  yum update -y
-
-  yum install nfs-utils
-
-  yum install -y docker
-  service docker start
-  usermod -a -G docker ec2-user
-
-  yum install git -y
-
-  DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-  mkdir -p $DOCKER_CONFIG/cli-plugins
-  curl -SL https://github.com/docker/compose/releases/download/v2.19.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-  chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
-  mkdir /mnt/efs
-  mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport <ENDEREÇO-DNsudo mount -t nfs4 -o nfsverS-DO-SEU-EFS>:/ /mnt/efs
+  sudo yum update -y
+  sudo yum install nfs-utils -y
+  sudo mkdir -p /mnt/efs
+  sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0a769358c96fbe63d.efs.us-east-1.amazonaws.com:/ /mnt/efs
+  sudo yum install -y docker
+  sudo systemctl start docker
+  sudo systemctl enable docker
+  sudo usermod -a -G docker ec2-user
+  sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+  sudo echo "fs-0a769358c96fbe63d.efs.us-east-1.amazonaws.com:/    /mnt/efs         nfs    defaults          0   0 " >> /etc/fstab
   ```
 
 - Finalize e execute a instância.
+
+
+## Acessando a instância da aplicação
+Pensando em uma maior segurança, foi utilizado um Bastion Host para acessar a aplicação. O bastion host é usado como ponto de entrada seguro para acessar e gerenciar servidores em uma rede, protegendo-os de acesso direto não autorizado. Então primeiro o acessaremos para, a partir dele, acessar a aplicação.
+
+### Acessando Bastion Host
+- No terminal da sua máquina, vá até o diretório que está seu Par de chaves.
+- Digite ```ssh-add <nome_do_seu_ParDeChaves>``` para usar um agente ssh e não precisar copiá-lo para dentro da instância bastion host.
+- Agora acesse a EC2 BastionHost digitando ```ssh -A -i <nome_do_seu_ParDeChaves> ec2-user@<Ip_Público_do_BastionHostEC2>```
+- Agora você está dentro do Bastion
+
+### Acessando a instância da aplicação 
+- Agora iremos acessar a aplicação a partir deste ambiente digitando ```ssh ec2-user@<Ip_Privado_da_AplicaçãoEC2>```
+- Pronto
+
+### Criando arquivo docker compose na ec2 da aplicação
+- Dentro da EC2 da aplicação, vá até o diretório do efs ```cd /mnt/efs``` 
+- Para criar e configurar o docker-compose.yml digite ```sudo nano docker-compose.yml``` e adicione o seguinte código:
+
+```version: '3'
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "80:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: <ENDPOINT_DO_SEU_RDS> 
+      WORDPRESS_DB_USER:  <SEU_USUARIO_DO_DB>
+      WORDPRESS_DB_PASSWORD: <SUA_SENHA_DO_DB>
+      WORDPRESS_DB_NAME: <NOME_INICIAL_DO_DB>
+    volumes:
+      - /mnt/efs/website:/var/www/html
+```
+
+- Agora para subir o container, digite ```docker-compose up ```
+
+### Configurando wordpress
+- Vá até o Load Balancer e copie seu "DNS Name" e pesquise no seu navegador, irá abrir a pagina do wordpress.
+- Selecione o idioma desejado e se cadastre.
+- Finalize
+
 
 ## Criando e configurando Balanceador de carga (Load Balancer)
 No console da Amazon Web Services, acesse o serviços de EC2
@@ -302,6 +339,7 @@ No painel esquerdo, acesse "Modelos de execução"
 - Em "Configurações de Rede":
   - Sub-rede: ```Não incluir no modelo de execução```
   - Grupo de segurança: ```Selecionar grupo de segurança existente``` > selecione o grupo de segurança da aplicação (```SG-App```)
+- Em "Detalhes avançados" coloque o user data ```sudo yum update -y```
 - Finalize em "Criar modelo de execução"
 
 ### Auto Scaling
@@ -327,46 +365,10 @@ No painel esquerdo, acesse "Grupos Auto Scaling"
 
 
 
-## Acessando a instância da aplicação
-Pensando em uma maior segurança, foi utilizado um Bastion Host para acessar a aplicação. O bastion host é usado como ponto de entrada seguro para acessar e gerenciar servidores em uma rede, protegendo-os de acesso direto não autorizado. Então primeiro o acessaremos para, a partir dele, acessar a aplicação.
-
-### Acessando Bastion Host
-- No terminal da sua máquina, vá até o diretório que está seu Par de chaves.
-- Digite ```ssh-add <nome_do_seu_ParDeChaves>``` para usar um agente ssh e não precisar copiá-lo para dentro da instância bastion host.
-- Agora acesse a EC2 BastionHost digitando ```ssh -A -i <nome_do_seu_ParDeChaves> ec2-user@<Ip_Público_do_BastionHostEC2>```
-- Agora você está dentro do Bastion
-
-### Acessando a instância da aplicação 
-- Agora iremos acessar a aplicação a partir deste ambiente digitando ```ssh ec2-user@<Ip_Privado_da_AplicaçãoEC2>```
-- Pronto
-
-
-cd /mnt/efs/
-
-sudo nano docker-compose.yml
-
-```version: '3.7'
-services:
-  wordpress:
-    image: wordpress
-    volumes:
-      - /mnt/efs/website:/var/www/html
-    ports:
-      - "80:80"
-    restart: always
-    environment:
-      WORDPRESS_DB_HOST: <ENDPOINT_DO_SEU_RDS> 
-      WORDPRESS_DB_USER:  <SEU_USUARIO_DO_DB>
-      WORDPRESS_DB_PASSWORD: <SUA_SENHA_DO_DB>
-      WORDPRESS_DB_NAME: <NOME_DO_SEU_DB>
-````
-```
-docker compose up -d
-
 
 
   
 ## Integrantes
-- Pedro Liu
-- Bruno Marques
-- José Toniolo
+- [Pedro Liu](https://github.com/PedroTxfl/Projeto_docker_wordpress) 
+- [Bruno Marques](https://github.com/BrunoMarques1/Atividade_DOCKER/tree/main)
+- [José Toniolo](https://github.com/vitortoniolo/PB-AtividadeDocker)
