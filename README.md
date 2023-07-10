@@ -253,6 +253,8 @@ Pensando em uma maior segurança, foi utilizado um Bastion Host para acessar a a
 - Agora acesse a EC2 BastionHost digitando ```ssh -A -i <nome_do_seu_ParDeChaves> ec2-user@<Ip_Público_do_BastionHostEC2>```
 - Agora você está dentro do Bastion
 
+- Ou Acesse o Bastion via Putty, mas você precisará copiar a chave da sua máquina local para dentro do BastionHost
+
 ### Acessando a instância da aplicação 
 - Agora iremos acessar a aplicação a partir deste ambiente digitando ```ssh ec2-user@<Ip_Privado_da_AplicaçãoEC2>```
 - Pronto
